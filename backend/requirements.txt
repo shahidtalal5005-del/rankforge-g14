@@ -1,0 +1,9 @@
+﻿fastapi
+uvicorn
+langchain-anthropic
+langgraph
+langgraph-checkpoint-postgres
+psycopg[binary,pool]
+psycopg2-binary
+python-dotenv
+pydantic

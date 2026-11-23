@@ -1,0 +1,107 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>RankForge - AI SEO & Affiliate Content Engine</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 20px; }
+    .nav { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 14px; margin-bottom: 20px; }
+    .nav a { color: #38bdf8; text-decoration: none; font-weight: 600; margin-left: 16px; }
+    .grid { display: grid; grid-template-columns: 1fr 1.4fr; gap: 20px; }
+    .card { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 18px; }
+    input, select, button { padding: 10px; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: #fff; }
+    button { background: #2563eb; border: none; cursor: pointer; font-weight: 600; }
+    button:hover { background: #1d4ed8; }
+    #chatbox { height: 360px; overflow-y: auto; background: #0f172a; padding: 12px; border-radius: 8px; margin: 12px 0; white-space: pre-wrap; line-height: 1.5; }
+    .msg-user { color: #38bdf8; margin-bottom: 10px; }
+    .msg-bot { color: #e2e8f0; margin-bottom: 14px; border-left: 3px solid #22c55e; padding-left: 10px; }
+    .kw-item { background: #0f172a; padding: 10px; border-radius: 6px; margin-bottom: 8px; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="nav">
+    <h2>RankForge <span style="font-size:13px;color:#94a3b8;">AI SEO &amp; Affiliate Engine</span></h2>
+    <div>
+      <label>User ID:
+        <select id="userId">
+          <option value="creator_ali">creator_ali</option>
+          <option value="creator_sara">creator_sara</option>
+        </select>
+      </label>
+      <a href="/admin.html">Admin Dashboard &rarr;</a>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h3>Available Affiliate Keywords</h3>
+      <p style="font-size:13px;color:#94a3b8;">Ask the agent to research keywords, draft an SEO post, or remember your blog niche.</p>
+      <div id="kwList">Loading keywords...</div>
+    </div>
+
+    <div class="card">
+      <h3>SEO Content Agent Workspace</h3>
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <input id="threadId" value="session_1" placeholder="Thread ID" style="width:140px;" />
+        <input id="apiBase" value="" placeholder="Same-origin API (leave blank or enter URL)" style="flex:1;" />
+      </div>
+      <div id="chatbox"></div>
+      <div style="display:flex;gap:8px;">
+        <input id="msgInput" placeholder="e.g., Find keywords for mechanical keyboards and draft a post" style="flex:1;" />
+        <button id="sendBtn" type="button">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const chatbox = document.getElementById("chatbox");
+    function getApi() {
+      const val = document.getElementById("apiBase").value.trim();
+      return val.endsWith("/") ? val.slice(0, -1) : val;
+    }
+
+    async function loadKeywords() {
+      try {
+        const res = await fetch(getApi() + "/admin/overview");
+        const data = await res.json();
+        document.getElementById("kwList").innerHTML = data.keywords.map(k =>
+          `<div class="kw-item"><b>${k.keyword}</b><br>Vol: ${k.volume}/mo | Diff: ${k.difficulty}<br><span style="color:#38bdf8">${k.link}</span></div>`
+        ).join("");
+      } catch (e) {
+        document.getElementById("kwList").innerText = "Error loading keywords: " + e.message;
+      }
+    }
+
+    async function sendMsg() {
+      const input = document.getElementById("msgInput");
+      const text = input.value.trim();
+      if (!text) return;
+      const userId = document.getElementById("userId").value;
+      const threadId = document.getElementById("threadId").value;
+      chatbox.innerHTML += `<div class="msg-user"><b>[${userId}]</b> ${text}</div>`;
+      input.value = "";
+
+      try {
+        const res = await fetch(getApi() + "/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ user_id: userId, thread_id: threadId, message: text })
+        });
+        const data = await res.json();
+        const tools = (data.tool_calls && data.tool_calls.length) ? ` [Tools: ${data.tool_calls.join(", ")}]` : "";
+        chatbox.innerHTML += `<div class="msg-bot"><b>RankForge${tools}:</b>\n${data.reply}</div>`;
+      } catch (e) {
+        chatbox.innerHTML += `<div class="msg-bot" style="border-color:#ef4444;"><b>Error:</b> ${e.message}</div>`;
+      }
+      chatbox.scrollTop = chatbox.scrollHeight;
+    }
+
+    document.getElementById("sendBtn").addEventListener("click", sendMsg);
+    document.getElementById("msgInput").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") sendMsg();
+    });
+
+    loadKeywords();
+  </script>
+</body>
+</html>

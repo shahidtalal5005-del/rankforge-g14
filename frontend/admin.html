@@ -1,0 +1,58 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>RankForge - Admin Dashboard</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 20px; }
+    .nav { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 14px; margin-bottom: 20px; }
+    .nav a { color: #38bdf8; text-decoration: none; font-weight: 600; }
+    .card { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 18px; margin-bottom: 20px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border-bottom: 1px solid #334155; padding: 10px; text-align: left; font-size: 14px; }
+    th { color: #94a3b8; }
+    button { background: #22c55e; color: #0f172a; border: none; padding: 8px 14px; border-radius: 6px; font-weight: 700; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div class="nav">
+    <h2>RankForge Admin Dashboard</h2>
+    <div>
+      <button id="refreshBtn" type="button">Refresh Live Data</button>
+      <a href="/" style="margin-left:16px;">&larr; Customer Storefront</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Published SEO &amp; Affiliate Articles (Isolated by User ID)</h3>
+    <table>
+      <thead><tr><th>ID</th><th>User ID</th><th>Title</th><th>Target Keyword</th><th>Published At</th></tr></thead>
+      <tbody id="articlesTable"></tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>Long-Term User Memories (Cross-Session Preferences)</h3>
+    <table>
+      <thead><tr><th>User ID</th><th>Saved Brand / Niche Preferences</th><th>Updated At</th></tr></thead>
+      <tbody id="memoriesTable"></tbody>
+    </table>
+  </div>
+
+  <script>
+    async function loadAdmin() {
+      const res = await fetch("/admin/overview");
+      const data = await res.json();
+      document.getElementById("articlesTable").innerHTML = data.articles.map(a =>
+        `<tr><td>#${a.id}</td><td><b>${a.user_id}</b></td><td>${a.title}</td><td>${a.keyword}</td><td>${a.created_at}</td></tr>`
+      ).join("") || "<tr><td colspan='5'>No articles published yet.</td></tr>";
+
+      document.getElementById("memoriesTable").innerHTML = data.memories.map(m =>
+        `<tr><td><b>${m.user_id}</b></td><td>${m.preferences}</td><td>${m.updated_at}</td></tr>`
+      ).join("") || "<tr><td colspan='3'>No user memories saved yet.</td></tr>";
+    }
+    document.getElementById("refreshBtn").addEventListener("click", loadAdmin);
+    loadAdmin();
+  </script>
+</body>
+</html>
